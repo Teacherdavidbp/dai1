@@ -1,0 +1,17 @@
+[build]
+  publish = "static"
+  command = "bash build.sh"
+
+[build.environment]
+  NODE_VERSION = "16"
+
+[[redirects]]
+  from = "/api/*"
+  to = "${REACT_APP_API_URL}/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200 

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>David AI - Intelligent Chat Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="/config.js"></script>
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --light-blue: #eff6ff;
+            --dark-blue: #1e40af;
+            --light-grey: #f8fafc;
+            --border-grey: #e2e8f0;
+            --gradient-start: #2563eb;
+            --gradient-end: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--light-grey);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.1);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chatBox {
+            flex-grow: 1;
+            height: 60vh;
+            padding: 20px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        #chatBox::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #chatBox::-webkit-scrollbar-track {
+            background: var(--light-grey);
+            border-radius: 4px;
+        }
+
+        #chatBox::-webkit-scrollbar-thumb {
+            background: var(--primary-blue);
+            border-radius: 4px;
+        }
+
+        .message-container {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            background: var(--light-grey);
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        #messageInput {
+            flex-grow: 1;
+            padding: 15px 25px;
+            border: 2px solid var(--border-grey);
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        #messageInput:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        #sendButton {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #sendButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        #sendButton:active {
+            transform: translateY(0);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            border-radius: 15px;
+            max-width: 85%;
+            position: relative;
+            animation: messageAppear 0.3s ease-out;
+        }
+
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            margin-left: auto;
+            border-radius: 15px 15px 0 15px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.1);
+        }
+
+        .ai-message {
+            background: var(--light-blue);
+            color: #1e293b;
+            margin-right: auto;
+            border-radius: 15px 15px 15px 0;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.05);
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            margin-right: auto;
+            border-radius: 15px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.1);
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+            position: absolute;
+            bottom: -25px;
+            left: 15px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-blue);
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: typingAnimation 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingAnimation {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+        }
+
+        /* Add these new styles */
+        .chat-history-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid var(--primary-blue);
+            color: var(--primary-blue);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .chat-history-button:hover {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .history-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .history-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid var(--border-grey);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            background: var(--light-blue);
+            transform: translateY(-2px);
+        }
+
+        .history-date {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .clear-history {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .clear-history:hover {
+            background: #dc2626;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+        }
+
+        .logout-btn {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>David AI</h1>
+        <p>Your Intelligent Chat Assistant</p>
+        <div class="user-info">
+            <span id="userName"></span>
+            <button onclick="handleLogout()" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+    <div class="chat-container">
+        <div id="chatBox"></div>
+        <div class="message-container">
+            <input type="text" id="messageInput" placeholder="Type your message here...">
+            <button id="sendButton">
+                <i class="fas fa-paper-plane"></i>
+                Send
+            </button>
+        </div>
+    </div>
+
+    <button class="chat-history-button" onclick="toggleHistory()">
+        <i class="fas fa-history"></i> Chat History
+    </button>
+
+    <div class="history-modal" id="historyModal">
+        <div class="history-content">
+            <h2 style="margin-bottom: 20px;">Chat History</h2>
+            <div id="historyList"></div>
+            <button class="clear-history" onclick="clearHistory()">Clear History</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.ENV.API_URL;
+        const SHEET_ID = window.ENV.SHEET_ID;
+
+        const chatBox = document.getElementById('chatBox');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        let isTyping = false;
+
+        function createTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator';
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'typing-dot';
+                indicator.appendChild(dot);
+            }
+            return indicator;
+        }
+
+        // Chat history management
+        const HISTORY_KEY = 'david_ai_chat_history';
+        
+        function saveToHistory(userMessage, aiResponse) {
+            const history = getHistory();
+            history.unshift({
+                userMessage,
+                aiResponse,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Keep only last 50 conversations
+            if (history.length > 50) {
+                history.pop();
+            }
+            
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+            updateHistoryDisplay();
+        }
+
+        function getHistory() {
+            const history = localStorage.getItem(HISTORY_KEY);
+            return history ? JSON.parse(history) : [];
+        }
+
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear all chat history?')) {
+                localStorage.removeItem(HISTORY_KEY);
+                updateHistoryDisplay();
+                document.getElementById('historyModal').style.display = 'none';
+            }
+        }
+
+        function toggleHistory() {
+            const modal = document.getElementById('historyModal');
+            if (modal.style.display === 'flex') {
+                modal.style.display = 'none';
+            } else {
+                modal.style.display = 'flex';
+                updateHistoryDisplay();
+            }
+        }
+
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            const history = getHistory();
+            
+            historyList.innerHTML = history.map((item, index) => `
+                <div class="history-item" onclick="loadConversation(${index})">
+                    <div class="history-date">
+                        ${new Date(item.timestamp).toLocaleString()}
+                    </div>
+                    <div><strong>You:</strong> ${item.userMessage}</div>
+                    <div><strong>AI:</strong> ${item.aiResponse}</div>
+                </div>
+            `).join('');
+        }
+
+        function loadConversation(index) {
+            const history = getHistory();
+            const item = history[index];
+            messageInput.value = item.userMessage;
+            toggleHistory();
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isTyping) return;
+
+            // Display user message
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'message user-message';
+            userMessageDiv.textContent = message;
+            chatBox.appendChild(userMessageDiv);
+            
+            messageInput.value = '';
+            isTyping = true;
+
+            // Show typing indicator
+            const aiMessageDiv = document.createElement('div');
+            aiMessageDiv.className = 'message ai-message';
+            aiMessageDiv.style.opacity = '0.5';
+            aiMessageDiv.appendChild(createTypingIndicator());
+            chatBox.appendChild(aiMessageDiv);
+
+            try {
+                const response = await fetch(`${API_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+                
+                // Remove typing indicator
+                chatBox.removeChild(aiMessageDiv);
+                
+                const messageDiv = document.createElement('div');
+                if (data.error) {
+                    messageDiv.className = 'message error-message';
+                    messageDiv.textContent = `Error: ${data.error}`;
+                } else {
+                    messageDiv.className = 'message ai-message';
+                    messageDiv.textContent = data.response;
+                    // Save successful conversations to history
+                    saveToHistory(message, data.response);
+                }
+                chatBox.appendChild(messageDiv);
+            } catch (error) {
+                chatBox.removeChild(aiMessageDiv);
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'message error-message';
+                errorDiv.textContent = `Error: ${error.message}`;
+                chatBox.appendChild(errorDiv);
+            }
+
+            isTyping = false;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        sendButton.onclick = sendMessage;
+        messageInput.onkeypress = (e) => {
+            if (e.key === 'Enter') sendMessage();
+        };
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('historyModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Authentication check
+        function checkAuth() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            document.getElementById('userName').textContent = `Welcome, ${user.name}`;
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Call checkAuth when page loads
+        checkAuth();
+    </script>
+</body>
+</html> 

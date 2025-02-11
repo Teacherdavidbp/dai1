@@ -1,0 +1,19 @@
+# Don't commit these
+credentials.json
+.env
+__pycache__/
+*.pyc
+venv/
+
+# Keep these
+!static/
+!build.sh
+!netlify.toml
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/ 
