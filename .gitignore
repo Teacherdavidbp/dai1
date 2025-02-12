@@ -16,4 +16,10 @@ Thumbs.db
 
 # IDE files
 .vscode/
-.idea/ 
+.idea/
+
+REACT_APP_API_URL=https://teacherdavid.pythonanywhere.com
+REACT_APP_SHEET_ID=1_gFP3lKUEWAvKAuXbpPT-2hRp7Mvy11TJjoAwz_ck80 
+
+# Update Config.py to use a cloud API
+OLLAMA_API = os.getenv('OLLAMA_API_URL', 'https://your-cloud-api.com/v1/chat') 

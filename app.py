@@ -6,10 +6,13 @@ from config import Config
 import os
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=[
+    "https://dai1.netlify.app",  # Your actual Netlify URL
+    "http://localhost:3000",
+    "http://localhost:5000"
+], supports_credentials=True)
 
 # Use config for settings
-OLLAMA_API = Config.OLLAMA_API
 PORT = Config.PORT
 
 # Serve static files
@@ -52,56 +55,46 @@ def chat():
         data = request.json
         message = data.get('message')
         
-        print(f"Sending request to Ollama with message: {message}")
+        print(f"Sending request to DeepSeek with message: {message}")
         
-        # Cloud-optimized model settings
-        response = requests.post(OLLAMA_API, json={
-            "model": "mistral:7b-instruct-v0.2-q4_K_M",
-            "prompt": message,
-            "stream": False,
-            "options": {
-                "num_thread": Config.NUM_THREADS,
-                "num_ctx": Config.CONTEXT_SIZE
+        headers = {
+            "Authorization": f"Bearer {Config.DEEPSEEK_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            Config.DEEPSEEK_API_URL,
+            headers=headers,
+            json={
+                "model": Config.DEEPSEEK_MODEL,
+                "messages": [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": message}
+                ]
             }
-        })
-        
-        # Print the raw response for debugging
-        print(f"Ollama response status: {response.status_code}")
-        print(f"Ollama response content: {response.text}")
+        )
         
         if response.status_code == 200:
             return jsonify({
-                "response": response.json()["response"]
+                "response": response.json()["choices"][0]["message"]["content"]
             })
         else:
-            # More detailed error logging
-            error_message = response.text.lower()
-            print(f"Error from Ollama: {error_message}")
-            
-            if any(phrase in error_message for phrase in ["disk space", "not enough space"]):
-                return jsonify({
-                    "error": "Insufficient disk space. Please free up some space and try again."
-                }), 507
-            elif "model not found" in error_message:
-                return jsonify({
-                    "error": "Model mistral:7b-instruct-v0.2-q4_K_M not found. Please check if the model is properly installed."
-                }), 404
-            
             return jsonify({
-                "error": f"Failed to get response from Ollama: {response.text}"
-            }), 500
+                "error": f"API Error: {response.text}"
+            }), response.status_code
             
     except Exception as e:
-        print(f"Exception occurred: {str(e)}")  # Detailed error logging
-        error_message = str(e).lower()
-        if any(phrase in error_message for phrase in ["disk space", "not enough space"]):
-            return jsonify({
-                "error": "Insufficient disk space. Please free up some space and try again."
-            }), 507
-        
+        print(f"Exception occurred: {str(e)}")
         return jsonify({
             "error": str(e)
         }), 500
+
+@app.route('/api/test', methods=['GET'])
+def test_connection():
+    return jsonify({
+        "status": "success",
+        "message": "Backend is connected!"
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT, debug=Config.DEBUG) 

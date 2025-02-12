@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Default to development values if environment variables aren't set
-API_URL=${REACT_APP_API_URL:-'http://localhost:5000'}
+API_URL=${REACT_APP_API_URL:-'https://teacherdavid.pythonanywhere.com'}
 SHEET_ID=${REACT_APP_SHEET_ID:-'1_gFP3lKUEWAvKAuXbpPT-2hRp7Mvy11TJjoAwz_ck80'}
 
 # Create config.js with environment variables

@@ -510,7 +510,6 @@
                 } else {
                     messageDiv.className = 'message ai-message';
                     messageDiv.textContent = data.response;
-                    // Save successful conversations to history
                     saveToHistory(message, data.response);
                 }
                 chatBox.appendChild(messageDiv);
@@ -556,6 +555,19 @@
 
         // Call checkAuth when page loads
         checkAuth();
+
+        // Replace the test connection URL
+        async function testConnection() {
+            try {
+                const response = await fetch('https://teacherdavid.pythonanywhere.com/api/test');
+                console.log('Connection test:', response.ok);
+            } catch (error) {
+                console.error('Connection error:', error);
+            }
+        }
+
+        // Call test on page load
+        document.addEventListener('DOMContentLoaded', testConnection);
     </script>
 </body>
 </html> 
